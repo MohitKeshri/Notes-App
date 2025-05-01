@@ -1,10 +1,14 @@
-require("dotenv").config();
+const dotenv = require("dotenv");
+dotenv.config();
+
+const PORT = process.env.PORT;
+const MONGO_URI = process.env.MONGO_URI
 
 const config = require("./config.json");
 const mongoose = require("mongoose");
 const jwt = require("jsonwebtoken");
 
-mongoose.connect(config.connectionString);
+mongoose.connect(MONGO_URI,{  ssl: true, tlsAllowInvalidCertificates: true });
 
 const User = require("./models/user.model");
 const Note = require("./models/note.model");
@@ -12,7 +16,7 @@ const Note = require("./models/note.model");
 const express = require("express");
 const cors = require("cors");
 const { authenticateToken } = require("./utilities");
-const path = require('path');
+const path = require("path");
 const app = express();
 
 app.use(express.json());
@@ -278,45 +282,49 @@ app.put("/update-note-pinned/:noteId", authenticateToken, async (req, res) => {
   }
 });
 
-app.get('/search-notes/',authenticateToken,async(req,res)=>{
-  const {user} = req.user;
-  const {query} = req.query;
+app.get("/search-notes/", authenticateToken, async (req, res) => {
+  const { user } = req.user;
+  const { query } = req.query;
 
-  if(!query){
-    return res.status(400).json({error:true,message:"Search query is required"});
+  if (!query) {
+    return res
+      .status(400)
+      .json({ error: true, message: "Search query is required" });
   }
 
-    try {
-      const matchingNotes = await Note.find({
-        userId:user._id,
-        $or: [
-          { title: {$regex: new RegExp(query,'i')}},
-          {content: {$regex: new RegExp(query,"i")}}
-        ]
-      })
+  try {
+    const matchingNotes = await Note.find({
+      userId: user._id,
+      $or: [
+        { title: { $regex: new RegExp(query, "i") } },
+        { content: { $regex: new RegExp(query, "i") } },
+      ],
+    });
 
-      return res.json({
-        error:false,
-        notes:matchingNotes,
-        message:"Notes matching the search query retrieved successfully"
-      })
-
-    } catch (error) {
-      return res.status(500).json({
-        error:true,
-        message:"internal server error",
-      })
-    }
-
+    return res.json({
+      error: false,
+      notes: matchingNotes,
+      message: "Notes matching the search query retrieved successfully",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      error: true,
+      message: "internal server error",
+    });
   }
-)
+});
 
-app.use(express.static(path.join(__dirname, "..", "frontend", "notes-app", "dist")));app.get(/.*/,(_,res)=>{
-  res.sendFile(path.resolve(__dirname,"..","frontend","notes-app","dist","index.html"));
-})
+app.use(
+  express.static(path.join(__dirname, "..", "frontend", "notes-app", "dist"))
+);
+app.get(/.*/, (_, res) => {
+  res.sendFile(
+    path.resolve(__dirname, "..", "frontend", "notes-app", "dist", "index.html")
+  );
+});
 
-app.listen(8000,()=>{
-  console.log("Server started");
+app.listen(PORT, () => {
+  console.log(`Server started on port:${PORT}`);
 });
 
 module.exports = app;
