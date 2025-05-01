@@ -12,6 +12,7 @@ const Note = require("./models/note.model");
 const express = require("express");
 const cors = require("cors");
 const { authenticateToken } = require("./utilities");
+const path = require('path');
 const app = express();
 
 app.use(express.json());
@@ -132,7 +133,6 @@ app.get("/get-user", authenticateToken, async (req, res) => {
 app.post("/add-note", authenticateToken, async (req, res) => {
   const { title, content, tags } = req.body;
   const { user } = req.user;
-  //console.log(user);
 
   if (!title) {
     return res.status(400).json({ error: true, message: "Title is required" });
@@ -311,6 +311,12 @@ app.get('/search-notes/',authenticateToken,async(req,res)=>{
   }
 )
 
-app.listen(8000);
+app.use(express.static(path.join(__dirname, "..", "frontend", "notes-app", "dist")));app.get(/.*/,(_,res)=>{
+  res.sendFile(path.resolve(__dirname,"..","frontend","notes-app","dist","index.html"));
+})
+
+app.listen(8000,()=>{
+  console.log("Server started");
+});
 
 module.exports = app;

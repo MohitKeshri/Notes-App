@@ -7,9 +7,10 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start":"nodemon index.js"
     
+    "dev":"nodemon backend/index.js",
+    "build":"npm i && npm i --prefix frontend/notes-app && npm run build --prefix frontend/notes-app",
+    "start":"npm i && nodemon backend/index.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
